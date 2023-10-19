@@ -18,7 +18,8 @@ import java.util.Map;
 @RequestMapping("/films")
 public class FilmController {
     private Map<Integer, Film> films = new HashMap<>();
-    private int counter;
+    private int counter = 1;
+
     @PostMapping
     private Film create(@Valid @RequestBody Film film) throws ValidationException {
         validate(film);
@@ -52,6 +53,14 @@ public class FilmController {
         if (film.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28))) {
             log.warn("Указанная дата релиза раньше дня рождения кино!");
             throw new ValidationException("Указанная дата релиза раньше дня рождения кино!");
+        }
+        if (film.getDuration() < 0) {
+            log.warn("Продолжительность не может быть отрицательной!");
+            throw new ValidationException("Продолжительность не может быть отрицательной!");
+        }
+        if (film.getName().equals(null) || film.getName().isBlank()) {
+            log.warn("Название не может быть пустым!");
+            throw new ValidationException("Название не может быть пустым!");
         }
     }
 }

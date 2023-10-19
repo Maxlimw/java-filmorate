@@ -22,7 +22,7 @@ public class UserController {
     @PostMapping
     private User create(@Valid @RequestBody User user) throws ValidationException {
         validate(user);
-        if(user.getName().isEmpty() || user.getName() == null) {
+        if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
         user.setId(counter);
@@ -33,7 +33,7 @@ public class UserController {
 
     @PutMapping
     private User update(@Valid @RequestBody User user) throws UserNotFoundException, ValidationException {
-        if(!users.containsKey(user)) {
+        if (!users.containsKey(user.getId())) {
             log.warn("Пользователь с id=" + user.getId() + " не найден!");
             throw new UserNotFoundException("Пользователь с таким id не найден!");
         }
@@ -46,20 +46,21 @@ public class UserController {
     private Collection<User> findAll() {
         return users.values();
     }
+
     private void validate(User user) throws ValidationException {
-        if(user.getEmail().isEmpty()) {
+        if (user.getEmail().isEmpty()) {
             log.warn("Электронная почта не может быть пустой!");
             throw new ValidationException("Электронная почта не может быть пустой!");
         }
-        if(!user.getEmail().contains("@")) {
+        if (!user.getEmail().contains("@")) {
             log.warn("Электронная почта должна содержать символ @");
             throw new ValidationException("Электронная почта должна содержать символ @");
         }
-        if(user.getBirthday().isAfter(LocalDate.now())) {
+        if (user.getBirthday().isAfter(LocalDate.now())) {
             log.warn("Дата рождения не может быть в будущем");
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
-        if(user.getLogin().contains(" ") || user.getLogin().isEmpty()) {
+        if (user.getLogin().contains(" ") || user.getLogin().isEmpty()) {
             log.warn("Логин не может содержать пробелы!");
             throw new ValidationException("Логин не может содержать пробелы!");
         }
