@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,7 +18,7 @@ public class UserController {
     private int counter = 1;
 
     @PostMapping
-    private User create(@RequestBody User user) throws ValidationException {
+    private User create(@Valid @RequestBody User user) throws ValidationException {
         validate(user);
         if(user.getName().isEmpty() || user.getName() == null) {
             user.setName(user.getLogin());
@@ -29,7 +30,7 @@ public class UserController {
     }
 
     @PutMapping
-    private User update(@RequestBody User user) throws UserNotFoundException, ValidationException {
+    private User update(@Valid @RequestBody User user) throws UserNotFoundException, ValidationException {
         if(!users.containsKey(user)) {
             log.warn("Пользователь с id=" + user.getId() + " не найден!");
             throw new UserNotFoundException("Пользователь с таким id не найден!");

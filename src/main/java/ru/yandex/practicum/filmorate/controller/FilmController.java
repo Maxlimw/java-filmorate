@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Collection;
@@ -17,7 +18,7 @@ public class FilmController {
     private Map<Integer, Film> films = new HashMap<>();
     private int counter;
     @PostMapping
-    private Film create(@RequestBody Film film) throws ValidationException {
+    private Film create(@Valid @RequestBody Film film) throws ValidationException {
         validate(film);
         film.setId(counter);
         films.put(film.getId(), film);
@@ -26,7 +27,7 @@ public class FilmController {
     }
 
     @PutMapping
-    private Film update(@RequestBody Film film) throws ValidationException, FilmNotFoundException {
+    private Film update(@Valid @RequestBody Film film) throws ValidationException, FilmNotFoundException {
         if (!films.containsKey(film.getId())) {
             log.warn("Фильм с id=" + film.getId() + " не найден!");
             throw new FilmNotFoundException("Фильм с таким id не найден!");
