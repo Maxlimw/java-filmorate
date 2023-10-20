@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -21,7 +22,7 @@ public class FilmController {
     private int counter = 1;
 
     @PostMapping
-    private Film create(@Valid @RequestBody Film film) throws ValidationException {
+    public Film create(@Valid @RequestBody Film film) throws ValidationException {
         validate(film);
         film.setId(counter);
         films.put(film.getId(), film);
@@ -41,7 +42,7 @@ public class FilmController {
     }
 
     @GetMapping
-    private Collection<Film> findAll() {
+    public Collection<Film> findAll() {
         return films.values();
     }
 
@@ -54,13 +55,31 @@ public class FilmController {
             log.warn("Указанная дата релиза раньше дня рождения кино!");
             throw new ValidationException("Указанная дата релиза раньше дня рождения кино!");
         }
-        if (film.getDuration() < 0) {
+        if (film.getDuration() <= 0) {
             log.warn("Продолжительность не может быть отрицательной!");
             throw new ValidationException("Продолжительность не может быть отрицательной!");
         }
-        if (film.getName().equals(null) || film.getName().isBlank()) {
+        if (film.getName() == null || film.getName().isBlank()) {
             log.warn("Название не может быть пустым!");
             throw new ValidationException("Название не может быть пустым!");
         }
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleValidationException(ValidationException e) {
+        log.warn("Validation Exception: " + e.getMessage());
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", e.getMessage());
+        return errorResponse;
+    }
+
+    @ExceptionHandler(FilmNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleFilmNotFoundException(FilmNotFoundException e) {
+        log.warn("Film Not Found Exception: " + e.getMessage());
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", e.getMessage());
+        return errorResponse;
     }
 }
