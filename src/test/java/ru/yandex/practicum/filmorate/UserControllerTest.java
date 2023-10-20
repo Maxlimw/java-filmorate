@@ -78,7 +78,7 @@ public class UserControllerTest {
 
     @Test
     void createUserEmptyNameTest() throws Exception {
-        User user = new User("cringe@mail.ru", "Maxim", "", LocalDate.of(2000, 07, 22));
+        User user = new User("cringe@mail.ru", "Maxlimw", "", LocalDate.of(2000, 07, 22));
 
         mockMvc.perform(
                         post("/users")
