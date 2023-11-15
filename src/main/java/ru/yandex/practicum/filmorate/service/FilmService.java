@@ -35,10 +35,6 @@ public class FilmService {
     }
 
     public Film update(Film film) throws FilmNotFoundException, ValidationException {
-        if (!filmStorage.getAll().containsKey(film.getId())) {
-            log.warn("Фильм с id = " + film.getId() + " не найден!");
-            throw new FilmNotFoundException("Фильм с id = " + film.getId() + " не найден!");
-        }
         validate(film);
         return filmStorage.update(film);
     }

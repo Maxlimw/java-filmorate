@@ -23,17 +23,10 @@ public class UserService {
 
     public User create(User user) throws ValidationException {
         validate(user);
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
         return userStorage.create(user);
     }
 
     public User update(User user) throws UserNotFoundException, ValidationException {
-        if (!userStorage.findAll().containsKey(user.getId())) {
-            log.warn("Пользователь с id = " + user.getId() + " не найден!");
-            throw new UserNotFoundException("Пользователь с id = " + user.getId() + " не найден!");
-        }
         validate(user);
         userStorage.update(user);
         return user;
@@ -48,13 +41,11 @@ public class UserService {
     }
 
     public void addFriend(Long id, Long friendId) throws UserNotFoundException {
-        if (userStorage.findAll().containsKey(friendId)) {
-            find(id).addFriend(friendId);
-            find(friendId).addFriend(id);
-        } else {
-            log.warn("Пользователь с id = " + friendId + " не найден!");
-            throw new UserNotFoundException("Пользователь с id = " + friendId + " не найден!");
-        }
+        User user = find(id);
+        User friend = find(friendId);
+
+        user.addFriend(friendId);
+        friend.addFriend(id);
     }
 
     public void removeFriend(Long id, Long friendId) throws UserNotFoundException {
@@ -88,7 +79,6 @@ public class UserService {
         }
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
-            return;
         }
         if (user.getEmail().isEmpty()) {
             log.warn("Электронная почта не может быть пустой!");

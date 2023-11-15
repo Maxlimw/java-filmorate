@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,7 +25,7 @@ import java.time.LocalDate;
 @WebMvcTest
 @AutoConfigureWebMvc
 @ContextConfiguration(classes = {FilmController.class, FilmService.class, InMemoryFilmStorage.class, UserService.class,
-        InMemoryUserStorage.class, ErrorHandler.class,})
+        InMemoryUserStorage.class, ErrorHandler.class,}) // без них падает билд
 public class FilmControllerTest {
 
     @Autowired
@@ -34,18 +33,6 @@ public class FilmControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    private Long counter = 1L;
-
-    @Autowired
-    private FilmService filmService;
-
-    static class TestConfig {
-        @Bean
-        public FilmService filmService() {
-            return new FilmService(new InMemoryFilmStorage(), new UserService(new InMemoryUserStorage()));
-        }
-    }
 
     @Test
     public void createFilmPositive() {
