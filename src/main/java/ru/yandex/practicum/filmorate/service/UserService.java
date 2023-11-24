@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -17,7 +18,7 @@ public class UserService {
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("userDb") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -37,39 +38,23 @@ public class UserService {
     }
 
     public User find(Long id) throws UserNotFoundException {
-        return userStorage.get(id);
+        return userStorage.getById(id);
     }
 
     public void addFriend(Long id, Long friendId) throws UserNotFoundException {
-        User user = find(id);
-        User friend = find(friendId);
-
-        user.addFriend(friendId);
-        friend.addFriend(id);
+        userStorage.addFriend(id, friendId);
     }
 
     public void removeFriend(Long id, Long friendId) throws UserNotFoundException {
-        find(id).getFriends().remove(friendId);
-        find(id).getFriends().remove(id);
+        userStorage.removeFromFriends(id, friendId);
     }
 
     public List<User> findFriends(Long id) throws UserNotFoundException {
-        List<User> friends = new ArrayList<>();
-
-        for (Long friendId : find(id).getFriends()) {
-            friends.add(find(friendId));
-        }
-
-        return friends;
+        return userStorage.getAllFriends(id);
     }
 
     public List<User> findCommonFriends(Long id, Long otherId) throws UserNotFoundException {
-        Set<User> firstUserFriends = new HashSet<>(findFriends(id));
-        Set<User> secondUserFriends = new HashSet<>(findFriends(otherId));
-
-        firstUserFriends.retainAll(secondUserFriends);
-
-        return new ArrayList<>(firstUserFriends);
+        return userStorage.getMutualFriends(id, otherId);
     }
 
     private void validate(User user) throws ValidationException {

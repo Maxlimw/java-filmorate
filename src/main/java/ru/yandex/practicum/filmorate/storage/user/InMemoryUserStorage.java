@@ -7,7 +7,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.*;
 
 @Slf4j
-@Component
+@Component("inMemoryUserStorage")
 public class InMemoryUserStorage implements UserStorage {
     private Map<Long, User> users = new HashMap<>();
     private Long counter = 1L;
@@ -35,7 +35,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User get(Long id) throws UserNotFoundException {
+    public User getById(Long id) throws UserNotFoundException {
         User user = users.get(id);
         if (user == null) {
             log.warn("Пользователь с id = " + id + " не найден!");
@@ -44,4 +44,50 @@ public class InMemoryUserStorage implements UserStorage {
         return user;
     }
 
+    @Override
+    public void addFriend(long userId, long friendId) {
+        User user = getById(userId);
+        User friend = getById(friendId);
+        if (user != null && friend != null) {
+            user.getFriends().add(friendId);
+            friend.getFriends().add(userId);
+        }
+    }
+
+    @Override
+    public void removeFromFriends(long userId, long friendId) {
+        User user = getById(userId);
+        User friend = getById(friendId);
+        if (user != null && friend != null) {
+            user.getFriends().remove(friendId);
+            friend.getFriends().remove(userId);
+        }
+    }
+
+    @Override
+    public List<User> getMutualFriends(long userId, long otherUserId) {
+        List<User> mutualFriends = new ArrayList<>();
+        User user = getById(userId);
+        User otherUser = getById(otherUserId);
+        if (user != null && otherUser != null) {
+            Set<Long> mutualFriendsIds = new HashSet<>(user.getFriends());
+            mutualFriendsIds.retainAll(otherUser.getFriends());
+            for (Long id : mutualFriendsIds) {
+                mutualFriends.add(getById(id));
+            }
+        }
+        return mutualFriends;
+    }
+
+    @Override
+    public List<User> getAllFriends(long userId) {
+        List<User> friends = new ArrayList<>();
+        User user = getById(userId);
+        if (user != null) {
+            for (Long id : user.getFriends()) {
+                friends.add(getById(id));
+            }
+        }
+        return friends;
+    }
 }

@@ -2,31 +2,29 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class FilmService {
+    private long nextId = 1;
     private final FilmStorage filmStorage;
-    private final UserService userService;
 
     @Autowired
-    public FilmService(FilmStorage filmStorage, UserService userService) {
+    public FilmService(@Qualifier("filmDb") FilmStorage filmStorage) {
         this.filmStorage = filmStorage;
-        this.userService = userService;
     }
 
     public Film create(Film film) throws ValidationException {
@@ -48,30 +46,22 @@ public class FilmService {
     }
 
     public void like(Long id, Long userId) throws FilmNotFoundException, UserNotFoundException {
-        Film film = find(id);
-        User user = userService.find(userId);
-
-        if (!user.getLikedFilms().contains(id)) {
-            film.setRate(film.getRate() + 1);
-        }
-        user.addLikedFilm(id);
+        filmStorage.addLike(id, userId);
     }
 
     public void unlike(Long id, Long userId) throws FilmNotFoundException, UserNotFoundException {
-        Film film = find(id);
-        User user = userService.find(userId);
-
-        if (user.getLikedFilms().contains(id)) {
-            film.setRate(film.getRate() - 1);
-        }
-        user.removeLikedFilm(id);
+        filmStorage.deleteLike(id, userId);
     }
 
     public List<Film> findMostPopular(int count) {
-        return findAll().stream()
-                .sorted(Comparator.comparingInt(Film::getRate).reversed())
+        return filmStorage.getAll().values().stream()
+                .sorted((f1, f2) -> f2.getLikes().size() - f1.getLikes().size())
                 .limit(count)
                 .collect(Collectors.toList());
+    }
+
+    private long getNextId() {
+        return nextId++;
     }
 
     private void validate(Film film) throws ValidationException {

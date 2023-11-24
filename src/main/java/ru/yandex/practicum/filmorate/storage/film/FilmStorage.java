@@ -13,4 +13,8 @@ public interface FilmStorage {
     Map<Long, Film> getAll();
 
     Film get(Long id) throws FilmNotFoundException;
+
+    void addLike(Long filmId, Long userId);
+
+    void deleteLike(Long filmId, Long userId);
 }
