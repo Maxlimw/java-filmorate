@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.MpaNotFoundException;
@@ -11,7 +10,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 @Service
-@Slf4j
 public class MpaService {
     private final MpaStorage mpaStorage;
 
@@ -21,7 +19,7 @@ public class MpaService {
     }
 
     public Collection<Mpa> getAllMpa() {
-        return Collections.unmodifiableCollection(mpaStorage.getAllMpa().values());
+        return Collections.unmodifiableList(mpaStorage.getAllMpa());
     }
 
     public Mpa getMpaById(int id) throws MpaNotFoundException {

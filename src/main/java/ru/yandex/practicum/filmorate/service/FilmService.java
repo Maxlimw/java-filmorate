@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class FilmService {
-    private long nextId = 1;
     private final FilmStorage filmStorage;
 
     @Autowired
@@ -58,10 +57,6 @@ public class FilmService {
                 .sorted((f1, f2) -> f2.getLikes().size() - f1.getLikes().size())
                 .limit(count)
                 .collect(Collectors.toList());
-    }
-
-    private long getNextId() {
-        return nextId++;
     }
 
     private void validate(Film film) throws ValidationException {

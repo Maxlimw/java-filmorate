@@ -2,14 +2,18 @@ package ru.yandex.practicum.filmorate.dao;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 
 @Slf4j
@@ -24,22 +28,37 @@ public class UserDb implements UserStorage {
 
     @Override
     public User create(User user) {
-        Long maxId = jdbcTemplate.queryForObject("SELECT MAX(USER_ID) FROM \"USER\"", Long.class);
-        Long newId = (maxId != null) ? maxId + 1 : 1;
+        KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        String sqlQuery = "INSERT INTO \"USER\" (USER_ID, EMAIL, LOGIN, BIRTHDAY, NAME) VALUES (?, ?, ?, ?, ?)";
-        jdbcTemplate.update(sqlQuery, newId, user.getEmail(), user.getLogin(), user.getBirthday(), user.getName());
+        String sqlQuery = "INSERT INTO \"USER\" (EMAIL, LOGIN, BIRTHDAY, NAME) VALUES (?, ?, ?, ?)";
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sqlQuery, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, user.getEmail());
+            ps.setString(2, user.getLogin());
+            ps.setDate(3, java.sql.Date.valueOf(user.getBirthday()));
+            ps.setString(4, user.getName());
+            return ps;
+        }, keyHolder);
 
-        user.setId(newId);
-        return getById(newId);
+        if (keyHolder.getKey() != null) {
+            Long newId = keyHolder.getKey().longValue();
+            user.setId(newId);
+            return user;
+        } else {
+            return null;
+        }
     }
 
     @Override
     public User update(User user) {
         String sqlQuery = "UPDATE \"USER\" SET EMAIL = ?, LOGIN = ?, BIRTHDAY = ?, NAME = ? WHERE USER_ID = ?";
-        jdbcTemplate.update(sqlQuery, user.getEmail(), user.getLogin(), user.getBirthday(), user.getName(),
+        int rowsUpdated = jdbcTemplate.update(sqlQuery, user.getEmail(), user.getLogin(), user.getBirthday(), user.getName(),
                 user.getId());
-        return getById(user.getId());
+
+        if (rowsUpdated == 0) {
+            throw new UserNotFoundException("Пользователь не найден по идентификатору: " + user.getId());
+        }
+        return user;
     }
 
     @Override
@@ -76,7 +95,7 @@ public class UserDb implements UserStorage {
 
     @Override
     public void addFriend(long userId, long friendId) {
-        User user = getById(userId);
+        getById(userId);
         User friend = getById(friendId);
         String sqlQuery = "INSERT INTO FRIENDSHIP (USER_FIRST_ID, USER_SECOND_ID) VALUES (?, ?);";
         jdbcTemplate.update(sqlQuery, userId, friendId);

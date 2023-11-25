@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.GenreNotFoundException;
@@ -12,7 +11,6 @@ import java.util.Collection;
 import java.util.Collections;
 
 @Service
-@Slf4j
 public class GenreService {
     private final GenreStorage genreStorage;
 
@@ -22,7 +20,7 @@ public class GenreService {
     }
 
     public Collection<Genre> getAllGenres() {
-        return Collections.unmodifiableCollection(genreStorage.getAllGenres().values());
+        return Collections.unmodifiableList(genreStorage.getAllGenres());
     }
 
     public Genre get(int id) throws GenreNotFoundException {

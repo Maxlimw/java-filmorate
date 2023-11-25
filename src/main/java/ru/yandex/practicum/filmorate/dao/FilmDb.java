@@ -3,6 +3,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
@@ -13,8 +15,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +24,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component("filmDb")
 public class FilmDb implements FilmStorage {
-
-    private static Long filmCount = 1L;
 
     private final JdbcTemplate jdbcTemplate;
     private final UserStorage userStorage;
@@ -40,15 +39,27 @@ public class FilmDb implements FilmStorage {
         String sqlCreate = "INSERT INTO FILM (NAME, DESCRIPTION, RELEASE_DATE, DURATION, RATING_ID) " +
                 "VALUES (?, ?, ?, ?, ?);";
         String queryForFilmGenre = "INSERT INTO FILM_GENRE (FILM_ID, GENRE_ID) VALUES (?, ?);";
-        jdbcTemplate.update(sqlCreate, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(),
-                film.getMpa().getId());
-        film.setId(filmCount++);
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sqlCreate, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, film.getName());
+            ps.setString(2, film.getDescription());
+            ps.setObject(3, java.sql.Date.valueOf(film.getReleaseDate()));
+            ps.setInt(4, film.getDuration());
+            ps.setInt(5, film.getMpa().getId());
+            return ps;
+        }, keyHolder);
+
+        film.setId(keyHolder.getKey().longValue());
+
         if (!film.getGenres().isEmpty()) {
             for (Genre genre : film.getGenres()) {
                 jdbcTemplate.update(queryForFilmGenre, film.getId(), genre.getId());
             }
         }
-        return get(film.getId());
+        return film;
     }
 
     @Override
@@ -65,7 +76,7 @@ public class FilmDb implements FilmStorage {
                 jdbcTemplate.update(queryForUpdateGenre, film.getId(), genre.getId());
             }
         }
-        return get(film.getId());
+        return get(film.getId()); // когда пытаюсь править отлетают тесты с обновлением, где ожидается 404. Не оч понимаю как править.
     }
 
     @Override
@@ -112,7 +123,7 @@ public class FilmDb implements FilmStorage {
 
     @Override
     public void addLike(Long filmId, Long userId) {
-        Film film = get(filmId);
+        get(filmId);
         User user = userStorage.getById(userId);
         String sqlQuery = "INSERT INTO FILM_LIKE (FILM_ID, USER_ID) VALUES (?, ?);";
         jdbcTemplate.update(sqlQuery, filmId, userId);
@@ -120,7 +131,6 @@ public class FilmDb implements FilmStorage {
 
     @Override
     public void deleteLike(Long filmId, Long userId) {
-        Film film = get(filmId);
         User user = userStorage.getById(userId);
         String sqlQuery = "DELETE FROM FILM_LIKE WHERE FILM_ID = ? AND USER_ID = ?;";
         jdbcTemplate.update(sqlQuery, filmId, userId);

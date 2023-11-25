@@ -9,15 +9,11 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Component
 @Slf4j
 public class GenreDb implements GenreStorage {
-
-    public static final Genre EMPTY = new Genre(-1, "Empty");
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -26,14 +22,9 @@ public class GenreDb implements GenreStorage {
     }
 
     @Override
-    public Map<Integer, Genre> getAllGenres() {
-        Map<Integer, Genre> allGenre = new HashMap<>();
+    public List<Genre> getAllGenres() {
         String sqlQuery = "SELECT * FROM GENRE;";
-        List<Genre> genreFromDb = jdbcTemplate.query(sqlQuery, this::mapRowToGenre);
-        for (Genre genre : genreFromDb) {
-            allGenre.put(genre.getId(), genre);
-        }
-        return allGenre;
+        return jdbcTemplate.query(sqlQuery, this::mapRowToGenre);
     }
 
     @Override

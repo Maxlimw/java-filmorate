@@ -9,9 +9,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Component
 @Slf4j
@@ -24,14 +22,9 @@ public class MpaDb implements MpaStorage {
     }
 
     @Override
-    public Map<Integer, Mpa> getAllMpa() {
-        Map<Integer, Mpa> allMpa = new HashMap<>();
+    public List<Mpa> getAllMpa() {
         String sqlQuery = "SELECT * FROM RATING;";
-        List<Mpa> mpaFromDb = jdbcTemplate.query(sqlQuery, this::mapRowToMpa);
-        for (Mpa mpa : mpaFromDb) {
-            allMpa.put(mpa.getId(), mpa);
-        }
-        return allMpa;
+        return jdbcTemplate.query(sqlQuery, this::mapRowToMpa);
     }
 
     @Override
