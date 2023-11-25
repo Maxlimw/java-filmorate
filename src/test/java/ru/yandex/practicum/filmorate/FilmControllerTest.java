@@ -122,20 +122,20 @@ public class FilmControllerTest {
 
         assertTrue(filmService.findAll().contains(film));
     }
-// почему-то падает, выдает false вместо true...
-//    @Test
-//    public void shouldPassReleaseDateValidation() {
-//        Film film = Film.builder()
-//                .name(FILM_NAME)
-//                .description(FILM_DESCRIPTION)
-//                .duration(FILM_DURATION)
-//                .releaseDate(LocalDate.of(1895, 12, 28))
-//                .mpa(FILM_MPA)
-//                .build();
-//        filmService.create(film);
-//
-//        assertTrue(filmService.findAll().contains(film));
-//    }
+
+    @Test
+    public void shouldPassReleaseDateValidation() {
+        Film film = Film.builder()
+                .name(FILM_NAME)
+                .description(FILM_DESCRIPTION)
+                .duration(FILM_DURATION)
+                .releaseDate(LocalDate.of(1900, 12, 28))
+                .mpa(FILM_MPA)
+                .build();
+        film = filmService.create(film);
+
+        assertTrue(filmService.findAll().contains(film));
+    }
 
     @Test
     public void shouldFindFilmById() {

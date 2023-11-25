@@ -16,9 +16,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.sql.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -64,6 +62,11 @@ public class FilmDb implements FilmStorage {
 
     @Override
     public Film update(Film film) {
+        if (!exists(film.getId())) {
+            log.warn("Фильм с id {} не найден", film.getId());
+            throw new FilmNotFoundException("Фильм с таким id не найден!");
+        }
+
         String sqlQueryUpd = "UPDATE FILM SET NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, RATING_ID = ?, DURATION = ?" +
                 " WHERE FILM_ID = ?;";
         String queryToDeleteFilmGenres = "DELETE FROM FILM_GENRE WHERE FILM_ID = ?;";
@@ -76,7 +79,9 @@ public class FilmDb implements FilmStorage {
                 jdbcTemplate.update(queryForUpdateGenre, film.getId(), genre.getId());
             }
         }
-        return get(film.getId()); // когда пытаюсь править отлетают тесты с обновлением, где ожидается 404. Не оч понимаю как править.
+        film.getGenres().clear();
+        film.getGenres().addAll(getGenresOfFilm(film.getId()));
+        return film;
     }
 
     @Override
@@ -88,6 +93,12 @@ public class FilmDb implements FilmStorage {
             films.put(film.getId(), film);
         }
         return films;
+    }
+
+    public boolean exists(Long id) {
+        String sqlQuery = "SELECT count(*) FROM FILM WHERE FILM_ID = ?;";
+        int count = jdbcTemplate.queryForObject(sqlQuery, new Object[] {id}, Integer.class);
+        return count > 0;
     }
 
     @Override
